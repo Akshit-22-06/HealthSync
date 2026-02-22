@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="padding:60px 8%;">
+    <h1>Generate AI Health Article</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="topic" placeholder="Enter topic (e.g. Better Sleep)" required>
+        <button type="submit">Generate</button>
+    </form>
+</div>
+
+{% endblock %}

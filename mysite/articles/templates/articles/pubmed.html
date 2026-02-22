@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="padding: 60px 8%;">
+
+    <h1>PubMed Research Articles</h1>
+    <br>
+
+    <form method="get">
+        <input type="text" name="q" placeholder="Search medical topic..." value="{{ request.GET.q }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <br><br>
+
+    {% if articles %}
+        {% for article in articles %}
+            <div style="background:white;padding:20px;margin-bottom:20px;border-radius:10px;border:1px solid #eee;">
+                
+                <h3>{{ article.title }}</h3>
+
+                <p>
+                    <strong>Journal:</strong> {{ article.fulljournalname }}
+                </p>
+
+                <p>
+                    <strong>Published:</strong> {{ article.pubdate }}
+                </p>
+
+                <p>
+                    <strong>Authors:</strong>
+                    {% for author in article.authors %}
+                        {{ author.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+
+                <p>
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/{{ article.uid }}/" target="_blank">
+                        View on PubMed
+                    </a>
+                </p>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No articles found.</p>
+    {% endif %}
+
+</div>
+
+{% endblock %}

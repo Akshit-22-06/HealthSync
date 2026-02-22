@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.articles-container {
+    padding: 60px 8%;
+}
+
+/* Header */
+.articles-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.articles-header h1 {
+    font-size: 38px;
+    margin-bottom: 10px;
+}
+
+.articles-header p {
+    color: #666;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: #f2f4f3;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+}
+
+.tab.active {
+    background: #3f8f7a;
+    color: white;
+}
+
+/* Search + Filters */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.filter-btn {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background: #3f8f7a;
+    color: white;
+    border: none;
+}
+
+/* Articles Grid */
+.articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.article-card {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    border: 1px solid #eee;
+    transition: 0.3s ease;
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: #e9f2ef;
+    color: #2f6f60;
+    margin-bottom: 10px;
+}
+
+.article-card h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.article-card p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.article-author {
+    font-size: 13px;
+    color: #777;
+}
+</style>
+
+<div class="articles-container">
+
+    <!-- HEADER -->
+    <div class="articles-header">
+        <h1>Health Articles</h1>
+        <p>Explore our collection of expert health articles and ancient Ayurveda wisdom</p>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <a href="#" class="tab active">Browse Articles</a>
+
+        {% if user.is_authenticated %}
+            <a href="#" class="tab">My Articles</a>
+            <a href="#" class="tab">Review Queue (2)</a>
+            <a href="{% url 'gemini_blog_generate' %}" class="tab">Find Blog with AI</a>
+        {% endif %}
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="search-box">
+            <input type="text" placeholder="Search articles...">
+        </div>
+
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Ayurveda</button>
+        <button class="filter-btn">Sleep</button>
+        <button class="filter-btn">Nutrition</button>
+        <button class="filter-btn">Mental Health</button>
+    </div>
+
+    <!-- ARTICLES GRID -->
+    <div class="articles-grid">
+
+        <div class="article-card">
+            <span class="category-badge">Sleep</span>
+            <h3>10 Tips for Better Sleep</h3>
+            <p>Quality sleep is essential for overall health. Here are 10 evidence-based tips to improve your sleep quality...</p>
+            <div class="article-author">By Dr. Sarah Johnson</div>
+        </div>
+
+        <div class="article-card">
+            <span class="category-badge">Nutrition</span>
+            <h3>The Benefits of Staying Hydrated</h3>
+            <p>Water is essential for life. Our bodies are about 60% water, and staying properly hydrated is crucial...</p>
+            <div class="article-author">By Dr. Emily Williams</div>
+        </div>
+
+        <div class="article-card">
+            <span class="category-badge">Ayurveda</span>
+            <h3>Introduction to Ayurveda</h3>
+            <p>Ayurveda, meaning "science of life" in Sanskrit, is an ancient Indian system of medicine practiced for over 5,000 years...</p>
+            <div class="article-author">By Vaidya Raj Kumar</div>
+        </div>
+
+        <div class="article-card">
+            <span class="category-badge">Mental Health</span>
+            <h3>Stress Management Techniques</h3>
+            <p>Chronic stress can have serious effects on your health. Here are proven techniques to manage stress...</p>
+            <div class="article-author">By Dr. Lisa Anderson</div>
+        </div>
+
+        <div class="article-card">
+            <span class="category-badge">Ayurveda</span>
+            <h3>Ayurvedic Morning Routine</h3>
+            <p>Starting your day with an Ayurvedic routine can transform your health. Here is a traditional Dinacharya...</p>
+            <div class="article-author">By Vaidya Raj Kumar</div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

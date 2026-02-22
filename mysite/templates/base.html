@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HealthSync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f8f9f8;
+            color: #1e1e1e;
+        }
+
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2f6f60;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #3f8f7a;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer {
+            background: #f1f3f2;
+            padding: 50px 8%;
+            margin-top: 80px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-col h4 {
+            margin-bottom: 15px;
+        }
+
+        .footer-col a {
+            display: block;
+            text-decoration: none;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        @media(max-width:768px) {
+            .nav-links {
+                gap: 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">💚 HealthSync</div>
+
+    <div class="nav-links">
+        {% if user.is_authenticated %}
+
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'articles' %}">Articles</a>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'community' %}">Community</a>
+            <a href="{% url 'symptom_checker' %}">Symptom Checker</a>
+
+            {% if user.role == "doctor" %}
+                <a href="{% url 'doctor_request_status' %}">Approval Status</a>
+            {% endif %}
+
+            <a href="#" class="btn-primary">Account</a>
+
+        {% else %}
+
+            <a href="{% url 'guest' %}">Home</a>
+            <a href="#">Articles</a>
+            <a href="{% url 'login' %}">Sign In</a>
+            <a href="{% url 'register' %}" class="btn-primary">Get Started</a>
+
+        {% endif %}
+        
+    </div>
+</div>
+
+    {% block content %}
+    {% endblock %}
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>HealthSync</h4>
+                <p>Your personal health and wellness companion. Track, learn, and thrive.</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <a href="{% url 'guest' %}">Home</a>
+                <a href="#">Health Articles</a>
+                <a href="#">Symptom Checker</a>
+                <a href="#">Community</a>
+            </div>
+
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <a href="#">Ayurveda Tips</a>
+                <a href="#">Health Tips</a>
+                <a href="#">Mental Wellness</a>
+            </div>
+
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <a href="#">Contact Us</a>
+                <a href="#">support@healthsync.app</a>
+            </div>
+        </div>
+
+        <div class="copyright">
+            © 2026 HealthSync. All rights reserved.
+        </div>
+    </footer>
+
+</body>
+</html>

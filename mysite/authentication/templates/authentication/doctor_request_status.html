@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .status-wrap {
+        max-width: 760px;
+        margin: 70px auto;
+        padding: 0 20px;
+    }
+    .status-card {
+        background: #fff;
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        padding: 28px;
+    }
+    .status-pill {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 12px;
+    }
+    .pending {
+        background: #fff4db;
+        color: #8a6113;
+    }
+    .approved {
+        background: #e7f7ee;
+        color: #1f6c42;
+    }
+</style>
+
+<div class="status-wrap">
+    <div class="status-card">
+        <h2>Doctor Approval Status</h2>
+        {% if is_approved %}
+            <p>Your doctor account is approved. You can access doctor-only pages.</p>
+            <span class="status-pill approved">Approved</span>
+        {% else %}
+            <p>Your doctor verification request is currently under admin review.</p>
+            <span class="status-pill pending">Pending Approval</span>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

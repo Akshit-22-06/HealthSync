@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+.hero {
+    text-align: center;
+    padding: 100px 8% 80px;
+}
+
+.hero h1 {
+    font-size: 52px;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    max-width: 700px;
+    margin: 0 auto 30px;
+    color: #555;
+    font-size: 18px;
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: #e9f2ef;
+    color: #2f6f60;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.section-title {
+    text-align: center;
+    margin: 80px 0 40px;
+}
+
+.section-title h2 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.section-title p {
+    color: #666;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 0 8% 80px;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.cta {
+    background: #3f8f7a;
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.cta h2 {
+    font-size: 36px;
+    margin-bottom: 15px;
+}
+
+.cta p {
+    margin-bottom: 25px;
+    color: #e8f5f2;
+}
+
+.cta .btn-primary {
+    background: white;
+    color: #3f8f7a;
+}
+
+@media(max-width:768px) {
+    .hero h1 {
+        font-size: 36px;
+    }
+}
+</style>
+
+<section class="hero">
+    <h1>Take Control of Your Health Journey</h1>
+    <p>
+        Track your daily wellness, access expert health advice, and connect with a supportive community.
+        HealthSync makes healthy living simple and achievable.
+    </p>
+
+    <div class="hero-buttons">
+        <a href="{% url 'register' %}" class="btn-primary">Start Your Journey</a>
+        <a href="#" class="btn-secondary">Explore Articles</a>
+    </div>
+</section>
+
+<div class="section-title">
+    <h2>Everything You Need for Wellness</h2>
+    <p>Comprehensive tools to help you track, learn, and improve your health every day.</p>
+</div>
+
+<div class="features">
+    <div class="card">
+        <h3>Health Tracking</h3>
+        <p>Log your daily sleep, water intake, exercise, mood, and meals to build healthy habits.</p>
+    </div>
+
+    <div class="card">
+        <h3>Visual Dashboard</h3>
+        <p>See your health trends with beautiful charts and gain insights into your wellness journey.</p>
+    </div>
+
+    <div class="card">
+        <h3>Health Articles</h3>
+        <p>Access curated health tips, Ayurveda wisdom, and expert wellness advice.</p>
+    </div>
+
+    <div class="card">
+        <h3>Community Support</h3>
+        <p>Connect anonymously with others on their mental wellness journey.</p>
+    </div>
+
+    <div class="card">
+        <h3>Symptom Checker</h3>
+        <p>Get doctor specialization recommendations based on your symptoms.</p>
+    </div>
+
+    <div class="card">
+        <h3>Mood Tracking</h3>
+        <p>Monitor your emotional well-being and discover patterns in your mood.</p>
+    </div>
+</div>
+
+<section class="cta">
+    <h2>Ready to Start Your Wellness Journey?</h2>
+    <p>Join thousands of users who are taking control of their health with HealthSync.</p>
+    <a href="{% url 'register' %}" class="btn-primary">Create Free Account</a>
+</section>
+
+{% endblock %}

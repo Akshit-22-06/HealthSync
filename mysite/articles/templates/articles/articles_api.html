@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="get">
+    <input type="text" name="q" placeholder="Search health topic..." value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+<div style="padding: 60px 8%;">
+    <h1>Health Articles (API)</h1>
+    <br>
+
+    {% for article in articles %}
+        <div style="background:white;padding:20px;margin-bottom:20px;border-radius:10px;">
+            <h3>{{ article.title }}</h3>
+            <p>{{ article.description }}</p>
+            <small>By {{ article.author }}</small>
+            <br><br>
+            <a href="{{ article.url }}" target="_blank">Read More</a>
+        </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
