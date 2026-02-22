@@ -111,7 +111,7 @@
             <a href="{% url 'articles' %}">Articles</a>
             <a href="{% url 'dashboard' %}">Dashboard</a>
             <a href="{% url 'community' %}">Community</a>
-            <a href="{% url 'symptom_checker' %}">Symptom Checker</a>
+            <a href="{% url 'symptom_home' %}">Symptom Checker</a>
 
             {% if user.role == "doctor" %}
                 <a href="{% url 'doctor_request_status' %}">Approval Status</a>
