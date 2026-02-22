@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HealthSync Symptom Checker</title>
+</head>
+<body>
+
+<h1>Symptom Checker</h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <h3>Select Symptoms</h3>
+
+    {% for symptom in symptoms %}
+        <input type="checkbox" name="symptoms" value="{{ symptom.id }}">
+        {{ symptom.name }} <br>
+    {% endfor %}
+
+    <h3>Select Area</h3>
+
+    <select name="area">
+        {% for area in areas %}
+            <option value="{{ area.id }}">{{ area.name }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+    <button type="submit">Check</button>
+</form>
+
+</body>
+</html>

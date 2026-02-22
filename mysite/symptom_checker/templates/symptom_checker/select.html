@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>HealthSync Symptom Checker</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#f4f7fb;
+    margin:0;
+}
+
+.container{
+    width:600px;
+    margin:80px auto;
+    background:white;
+    padding:40px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2{margin-bottom:20px;}
+
+.progress-bar{
+    background:#eee;
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:30px;
+}
+
+.progress{
+    background:#4caf50;
+    color:white;
+    padding:6px;
+}
+
+.option{
+    display:block;
+    margin:10px 0;
+}
+
+button{
+    background:#3f51b5;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:6px;
+    margin-top:20px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>{{ question.text }}</h2>
+
+<div class="progress-bar">
+    <div class="progress" style="width:{{progress}}%">
+        {{progress}}%
+    </div>
+</div>
+
+<form method="POST">
+{% csrf_token %}
+
+{% if question.type == "choice" %}
+    {% for opt in question.options %}
+        <label class="option">
+            <input type="radio" name="answer" value="{{opt}}" required>
+            {{opt}}
+        </label>
+    {% endfor %}
+{% endif %}
+
+<button type="submit">Next</button>
+
+</form>
+
+</div>
+</body>
+</html>

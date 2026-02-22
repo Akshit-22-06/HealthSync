@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HealthSync Symptom Checker</title>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f6fb;
+            margin:0;
+        }
+
+        .container{
+            max-width:700px;
+            margin:80px auto;
+            background:white;
+            padding:40px;
+            border-radius:14px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h2{
+            margin-bottom:20px;
+            color:#222;
+        }
+
+        .option{
+            margin:10px 0;
+        }
+
+        button{
+            margin-top:20px;
+            background:#4f7cff;
+            color:white;
+            border:none;
+            padding:12px 22px;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+            transition:0.2s;
+        }
+
+        button:hover{
+            background:#365fe6;
+        }
+
+        .progress{
+            height:8px;
+            background:#eee;
+            border-radius:6px;
+            margin-bottom:25px;
+        }
+
+        .progress-bar{
+            height:100%;
+            background:#4f7cff;
+            border-radius:6px;
+            width:{{ progress }}%;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="progress">
+        <div class="progress-bar"></div>
+    </div>
+
+    <h2>{{ question.text }}</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {% if question.type == "yes_no" %}
+
+            <div class="option">
+                <input type="radio" name="answer" value="yes" required> Yes
+            </div>
+
+            <div class="option">
+                <input type="radio" name="answer" value="no"> No
+            </div>
+
+        {% elif question.type == "scale" %}
+
+            {% for opt in question.options %}
+                <div class="option">
+                    <input type="radio" name="answer" value="{{ opt }}" required>
+                    {{ opt }}
+                </div>
+            {% endfor %}
+
+        {% endif %}
+
+        <button type="submit">Next →</button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

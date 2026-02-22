@@ -1,0 +1,19 @@
+<form method="POST">
+{% csrf_token %}
+
+{% for q in questions %}
+<div class="question-card">
+    <p>{{ q.text }}</p>
+
+    <label>
+        <input type="radio" name="{{ q.id }}" value="yes"> Yes
+    </label>
+
+    <label>
+        <input type="radio" name="{{ q.id }}" value="no"> No
+    </label>
+</div>
+{% endfor %}
+
+<button type="submit">Check Symptoms</button>
+</form>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Symptom Checker</title>
+</head>
+<body>
+
+<h1>Symptom Checker</h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <h3>Select Symptoms</h3>
+    {% for s in symptoms %}
+        <label>
+            <input type="checkbox" name="symptoms" value="{{ s.id }}">
+            {{ s.name }}
+        </label><br>
+    {% endfor %}
+
+    <h3>Select Area</h3>
+    <select name="area">
+        <option value="">--Select Area--</option>
+        {% for a in areas %}
+            <option value="{{ a.id }}">{{ a.name }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+    <button type="submit">Check</button>
+</form>
+
+
+{% if causes %}
+<h2>Possible Causes</h2>
+<ul>
+    {% for c in causes %}
+        <li>{{ c.name }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+{% if diseases %}
+<h2>Possible Diseases</h2>
+<ul>
+    {% for d in diseases %}
+        <li>{{ d.name }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+{% if doctors %}
+<h2>Nearby Doctors</h2>
+<ul>
+    {% for doc in doctors %}
+        <li>{{ doc.name }} - {{ doc.specialization }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+</body>
+</html>
