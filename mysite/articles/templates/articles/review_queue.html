@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.review-container {
+    padding: 60px 10%;
+}
+
+.review-card {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    border: 1px solid #eee;
+    margin-bottom: 25px;
+}
+
+.review-card h3 {
+    margin-bottom: 5px;
+}
+
+.review-meta {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 15px;
+}
+
+.review-content {
+    background: #f7f7f7;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-approve {
+    background: #3f8f7a;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-reject {
+    background: #e74c3c;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+</style>
+
+<div class="review-container">
+
+    <h2>Pending Articles for Review</h2>
+    <br>
+
+    {% for article in pending_articles %}
+
+        <div class="review-card">
+            <h3>{{ article.title }}</h3>
+            <div class="review-meta">
+                By {{ article.author.username }} • Submitted on {{ article.created_at|date:"M d, Y" }}
+            </div>
+
+            <div class="review-content">
+                {{ article.content|truncatewords:60 }}
+            </div>
+
+            <form method="POST" action="{% url 'reject_article' article.id %}">
+                {% csrf_token %}
+                <textarea name="rejection_reason" placeholder="Review Notes (optional)" style="width:100%; padding:10px; border-radius:6px; margin-bottom:10px;"></textarea>
+
+                <div class="review-actions">
+                    <button formaction="{% url 'reject_article' article.id %}" class="btn-reject">
+                        Reject
+                    </button>
+
+                    <button formaction="{% url 'approve_article' article.id %}" class="btn-approve">
+                        Approve & Publish
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    {% empty %}
+        <p>No pending articles 🎉</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
