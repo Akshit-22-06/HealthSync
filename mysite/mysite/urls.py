@@ -3,7 +3,7 @@ from django.urls import path, include
 from authentication.views import guest_page
 from authentication import views
 from dashboard import views as dashboard_views
-from articles import views as articles_api
+from articles import views as articles
 from community import views as community_views
 from symptom_checker import views as symptom_checker_views
 from django.conf import settings
@@ -19,11 +19,11 @@ urlpatterns = [
     path('register/', views.register_page, name='register'),# Registration page
     path('doctor/request-status/', views.doctor_request_status, name='doctor_request_status'),
     path('doctor/portal/', views.doctor_portal, name='doctor_portal'),
+    path('generate-blog/', articles.gemini_blog_generate, name='gemini_blog_generate'),
     path('dashboard/', include('dashboard.urls')),
-    path('articles-api/', articles_api.article, name='articles'),
+    path('articles/', include('articles.urls')),
     path('community/', community_views.community, name='community'),
     path('symptoms/', include('symptom_checker.urls')),
-    path('generate-blog/', articles_api.gemini_blog_generate, name='gemini_blog_generate'),
+   
 #     path('list-models/', articles_api.list_models, name='list_models'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

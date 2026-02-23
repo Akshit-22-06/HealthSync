@@ -1,19 +1,45 @@
-from django.shortcuts import render
+from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from html import escape
 import logging
 import re
-
-try:
-    import google.generativeai as genai
-except ModuleNotFoundError:
-    genai = None
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import Group
+from django.core.exceptions import PermissionDenied
+from .models import Article
+from .forms import ArticleForm
 
 logger = logging.getLogger(__name__)
 
 
 def article(request):
-    return render(request, 'articles/articles.html')
+    approved_articles = Article.objects.filter(status="approved").order_by("-created_at")
+
+    is_doctor = False
+    if request.user.is_authenticated:
+        is_doctor = request.user.groups.filter(name="Doctor").exists()
+
+    return render(request, 'articles/articles.html', {
+        "approved_articles": approved_articles,
+        "is_doctor": is_doctor,
+    })
+
+
+def is_doctor(user):
+    if user.groups.filter(name="Doctor").exists():
+        return True
+    raise PermissionDenied
+
+
+def is_admin(user):
+    return user.groups.filter(name="Admin").exists()
+
+
+try:
+    import google.generativeai as genai
+except ModuleNotFoundError:
+    genai = None
 
 
 def _inline_markdown_to_html(text: str) -> str:
@@ -29,7 +55,7 @@ def _format_generated_article(raw_text: str) -> str:
     in_ul = False
     in_ol = False
 
-    def close_lists() -> None:
+    def close_lists():
         nonlocal in_ul, in_ol
         if in_ul:
             html_parts.append("</ul>")
@@ -87,8 +113,7 @@ def _format_generated_article(raw_text: str) -> str:
 
 
 def gemini_blog_generate(request):
-
-    article = None
+    article_text = None
     article_html = None
     topic = None
     error_message = None
@@ -101,7 +126,7 @@ def gemini_blog_generate(request):
             return render(
                 request,
                 "articles/gemini_blog.html",
-                {"article": article, "article_html": article_html, "topic": topic, "error_message": error_message},
+                {"article": article_text, "article_html": article_html, "topic": topic, "error_message": error_message},
             )
 
         prompt = f"""
@@ -124,24 +149,91 @@ def gemini_blog_generate(request):
             genai.configure(api_key=settings.GEMINI_API_KEY)
             model = genai.GenerativeModel("models/gemini-2.5-flash")
             response = model.generate_content(prompt)
-            article = response.text
-            article_html = _format_generated_article(article)
+            article_text = response.text
+            article_html = _format_generated_article(article_text)
+
         except Exception as e:
             logger.exception("Gemini blog generation failed: %s", e)
-            lower_err = str(e).lower()
-
-            if "api key not valid" in lower_err or "api_key_invalid" in lower_err:
-                error_message = "Gemini API key is invalid. Update GEMINI_API_KEY in your .env file and restart the server."
-            elif "not configured" in lower_err:
-                error_message = "GEMINI_API_KEY is missing. Add it to your .env file and restart the server."
-            elif "not installed" in lower_err:
-                error_message = "Gemini SDK is not installed. Install dependencies and try again."
-            else:
-                error_message = "Could not generate article right now. Please try again."
+            error_message = "Could not generate article right now. Please try again."
 
     return render(request, "articles/gemini_blog.html", {
-        "article": article,
+        "article": article_text,
         "article_html": article_html,
         "topic": topic,
         "error_message": error_message,
     })
+
+
+@login_required
+@user_passes_test(is_doctor)
+def approve_article(request, id):
+    article = get_object_or_404(Article, id=id)
+    article.status = "approved"
+    article.reviewer = request.user
+    article.reviewed_at = timezone.now()
+    article.save()
+    return redirect("review_queue")
+
+
+@login_required
+@user_passes_test(is_doctor)
+def reject_article(request, id):
+    article = get_object_or_404(Article, id=id)
+    article.status = "rejected"
+    article.reviewer = request.user
+    article.reviewed_at = timezone.now()
+    article.rejection_reason = request.POST.get("rejection_reason", "")
+    article.save()
+    return redirect("review_queue")
+
+
+@login_required
+@user_passes_test(is_doctor)
+def review_queue(request):
+    pending_articles = Article.objects.filter(status="pending")
+    return render(request, "articles/review_queue.html", {
+        "pending_articles": pending_articles
+    })
+
+
+@login_required
+def my_articles(request):
+    user_articles = Article.objects.filter(
+        author=request.user
+    ).order_by("-created_at")
+
+    return render(request, "articles/my_article.html", {
+        "user_articles": user_articles
+    })
+
+
+@login_required
+def post_article(request):
+    if request.method == "POST":
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.author = request.user
+            article.status = "pending"
+            article.save()
+            return redirect("my_articles")
+    else:
+        form = ArticleForm()
+
+    user_articles = Article.objects.filter(author=request.user)
+
+    return render(request, "articles/my_article.html", {
+        "form": form,
+        "user_articles": user_articles
+    })
+
+
+@login_required
+def delete_article(request, id):
+    article = get_object_or_404(Article, id=id, author=request.user)
+
+    if request.method == "POST":
+        article.delete()
+        return redirect("my_articles")
+
+    return redirect("my_articles")
