@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.edit-wrapper {
+    padding: 60px 10%;
+}
+
+.edit-card {
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    max-width: 600px;
+    margin: auto;
+}
+
+.edit-card h2 {
+    margin-bottom: 25px;
+}
+
+form input, form select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    margin-bottom: 18px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+button {
+    background: #3f8f7a;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.cancel-link {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #999;
+}
+</style>
+
+<div class="edit-wrapper">
+    <div class="edit-card">
+        <h2>Edit Health Log</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Update Log</button>
+            <a href="{% url 'dashboard' %}" class="cancel-link">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
