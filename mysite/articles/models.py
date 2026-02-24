@@ -15,7 +15,7 @@ class Article(models.Model):
     
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="articles")
     reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="reviewed_articles")
-
+    category = models.CharField(max_length=100, default="General")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     created_at = models.DateTimeField(auto_now_add=True)

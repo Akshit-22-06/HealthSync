@@ -1,3 +1,5 @@
+from unicodedata import category
+from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
@@ -14,8 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 def article(request):
-    approved_articles = Article.objects.filter(status="approved").order_by("-created_at")
-
+    category = request.GET.get("category")
+    search_query = request.GET.get("q")
+    approved_articles = Article.objects.filter(status="approved")
+    if category and category != "All":
+        approved_articles = approved_articles.filter(category__iexact=category)
+    if search_query:
+            approved_articles = approved_articles.filter(
+        Q(title__icontains=search_query) |
+        Q(content__icontains=search_query)
+)
+    approved_articles = approved_articles.order_by("-created_at")
     is_doctor = False
     if request.user.is_authenticated:
         is_doctor = request.user.groups.filter(name="Doctor").exists()
@@ -23,6 +34,9 @@ def article(request):
     return render(request, 'articles/articles.html', {
         "approved_articles": approved_articles,
         "is_doctor": is_doctor,
+        "selected_category": category or "All",
+        "search_query": search_query or "",
+        "categories": Article.objects.values_list("category", flat=True).distinct(),
     })
 
 

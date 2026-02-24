@@ -158,15 +158,22 @@
 
     <!-- FILTER BAR -->
     <div class="filter-bar">
-        <div class="search-box">
-            <input type="text" placeholder="Search articles...">
-        </div>
+        <form method="GET" style="display:flex; gap:10px; width:100%;">
+            <div class="search-box">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search articles...">
+            </div>
+            <input type="hidden" name="category" value="{{ selected_category }}">
+        </form>
+    <a href="?category=All" class="filter-btn {% if selected_category == 'All' %}active{% endif %}">
+        All
+    </a>
 
-        <button class="filter-btn active">All</button>
-        <button class="filter-btn">Ayurveda</button>
-        <button class="filter-btn">Sleep</button>
-        <button class="filter-btn">Nutrition</button>
-        <button class="filter-btn">Mental Health</button>
+    {% for cat in categories %}
+        <a href="?category={{ cat }}" 
+        class="filter-btn {% if selected_category == cat %}active{% endif %}">
+            {{ cat }}
+        </a>
+    {% endfor %}
     </div>
 
     <!-- ARTICLES GRID -->
@@ -174,7 +181,7 @@
 
         {% for article in approved_articles %}
             <div class="article-card">
-                <span class="category-badge">User Article</span>
+                <span class="category-badge">{{ article.category }}</span>
                 <h3>{{ article.title }}</h3>
                 <p>{{ article.content|truncatewords:25 }}</p>
                 <div class="article-author">By {{ article.author.username }}</div>
