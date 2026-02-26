@@ -1,159 +1,183 @@
-# ============================================
-# HEALTHSYNC SYMPTOM CHECKER ENGINE
-# FULL VERSION — FIXED FLOW (OPTION A)
-# ============================================
+from __future__ import annotations
+
+from django.utils import timezone
+
+from symptom_checker.ai_client import AIGenerationError, generate_diagnosis, generate_questions
+from symptom_checker.diagnosis import build_result_payload
+from symptom_checker.models import Condition, SymptomSession
+from symptom_checker.question_flow import append_answer, current_question, next_index
+from symptom_checker.schemas import AnswerItem, DiagnosisResult, IntakeData, QuestionItem
+from symptom_checker.services.recommendations import (
+    issue_collectible_tag,
+    recommended_articles,
+)
+from symptom_checker.services.triage import match_doctors_for_specializations
 
 
-# -------------------------------
-# GLOBAL QUESTION BANK
-# (Merged from your disease files)
-# -------------------------------
-
-QUESTIONS = [
-    {"id": "fever", "text": "Do you have a fever?", "type": "yes_no"},
-    {"id": "conjunctivitis", "text": "Do you have red watery eyes?", "type": "yes_no"},
-    {"id": "koplik_spots", "text": "Do you see white spots inside the mouth?", "type": "yes_no"},
-    {"id": "rash_face_spread", "text": "Is there a rash spreading from face downwards?", "type": "yes_no"},
-    {"id": "pink_rash", "text": "Do you have a pink rash?", "type": "yes_no"},
-    {"id": "joint_pain", "text": "Do you have joint pain?", "type": "yes_no"},
-    {"id": "itchy_rash", "text": "Is the rash itchy?", "type": "yes_no"},
-    {"id": "fluid_blisters", "text": "Does the rash look like fluid-filled blisters?", "type": "yes_no"},
-    {"id": "burning_pain", "text": "Is the rash painful or burning?", "type": "yes_no"},
-    {"id": "unilateral_rash", "text": "Is rash only on one side of body?", "type": "yes_no"},
-    {"id": "jaw_swelling", "text": "Is there swelling near jaw or ear?", "type": "yes_no"},
-    {"id": "high_fever", "text": "Is the fever high grade?", "type": "yes_no"},
-    {"id": "altered_mental_state", "text": "Is there confusion or drowsiness?", "type": "yes_no"},
-    {"id": "seizures", "text": "Have there been seizures?", "type": "yes_no"},
-    {"id": "eye_pain", "text": "Do you have pain behind the eyes?", "type": "yes_no"},
-    {"id": "severe_body_pain", "text": "Is the body pain severe?", "type": "yes_no"},
-    {"id": "bleeding_signs", "text": "Is there any bleeding?", "type": "yes_no"},
-    {"id": "watery_diarrhea", "text": "Is there watery diarrhea?", "type": "yes_no"},
-    {"id": "vomiting", "text": "Is there vomiting?", "type": "yes_no"},
-    {"id": "dehydration_signs", "text": "Are there signs of dehydration?", "type": "yes_no"},
-    {"id": "sudden_limb_weakness", "text": "Is there sudden weakness in a limb?", "type": "yes_no"},
-    {"id": "neck_stiffness", "text": "Is there neck stiffness?", "type": "yes_no"},
-    {"id": "swallowing_breathing_difficulty", "text": "Difficulty breathing or swallowing?", "type": "yes_no"},
-    {"id": "muscle_aches", "text": "Do you have severe muscle aches?", "type": "yes_no"},
-    {"id": "cough", "text": "Do you have cough?", "type": "yes_no"},
-    {"id": "weight_loss", "text": "Is there persistent weight loss?", "type": "yes_no"},
-    {"id": "chronic_diarrhea", "text": "Is diarrhea lasting >30 days?", "type": "yes_no"},
-    {"id": "oral_thrush", "text": "White patches in mouth?", "type": "yes_no"},
-]
+SESSION_KEY = "symptom_checker_flow"
 
 
-# --------------------------------
-# DISEASE RULE ENGINE
-# (Based EXACTLY on your document)
-# --------------------------------
-
-DISEASES = [
-
-    {
-        "id": "measles",
-        "display": "Measles (Rubeola)",
-        "min_score": 5,
-        "message": "Measles is highly contagious. Isolate immediately and consult doctor.",
-        "score_map": {
-            "rash_face_spread": 3,
-            "koplik_spots": 3,
-            "fever": 2,
-            "conjunctivitis": 2,
-        },
-    },
-
-    {
-        "id": "rubella",
-        "display": "Rubella",
-        "min_score": 5,
-        "message": "Rubella is mild but dangerous in pregnancy.",
-        "score_map": {
-            "pink_rash": 2,
-            "joint_pain": 1,
-        },
-    },
-
-    {
-        "id": "chickenpox",
-        "display": "Chickenpox",
-        "min_score": 5,
-        "message": "Chickenpox is contagious until lesions crust.",
-        "score_map": {
-            "fluid_blisters": 3,
-            "itchy_rash": 2,
-            "fever": 2,
-        },
-    },
-
-    {
-        "id": "shingles",
-        "display": "Herpes Zoster (Shingles)",
-        "min_score": 6,
-        "message": "Shingles is varicella reactivation.",
-        "score_map": {
-            "unilateral_rash": 3,
-            "burning_pain": 3,
-        },
-    },
-
-    {
-        "id": "dengue",
-        "display": "Dengue Fever",
-        "min_score": 6,
-        "message": "Monitor bleeding and hydration carefully.",
-        "score_map": {
-            "bleeding_signs": 3,
-            "severe_body_pain": 2,
-            "eye_pain": 2,
-        },
-    },
-
-    {
-        "id": "influenza",
-        "display": "Influenza",
-        "min_score": 6,
-        "message": "Rest and monitor fever. Antivirals early help.",
-        "score_map": {
-            "high_fever": 3,
-            "muscle_aches": 2,
-            "cough": 2,
-        },
-    },
-
-]
+def _initial_state() -> dict:
+    return {
+        "session_id": None,
+        "intake": {},
+        "questions": [],
+        "answers": [],
+        "current_index": 0,
+        "diagnosis": None,
+        "diagnosis_error": "",
+        "ai_calls": {"questions": 0, "diagnosis": 0},
+    }
 
 
-# --------------------------------
-# QUESTION GETTER
-# --------------------------------
-
-def get_question_by_index(index):
-    if index < len(QUESTIONS):
-        return QUESTIONS[index]
-    return None
+def _flow(request) -> dict:
+    return request.session.get(SESSION_KEY, _initial_state())
 
 
-# --------------------------------
-# MAIN ENGINE FUNCTION
-# --------------------------------
+def _save_flow(request, flow: dict) -> None:
+    request.session[SESSION_KEY] = flow
+    request.session.modified = True
 
-def run_engine(user_answers):
 
-    results = []
+def start_session(request, intake: IntakeData) -> None:
+    ai_questions = generate_questions(intake)
+    questions = [question.to_dict() for question in ai_questions]
 
-    for disease in DISEASES:
+    db_session = SymptomSession.objects.create(
+        user=request.user if getattr(request.user, "is_authenticated", False) else None,
+        initial_symptom=intake.symptom,
+        age=intake.age,
+        gender=intake.gender,
+        state=intake.state,
+        status=SymptomSession.STATUS_ACTIVE,
+    )
+    flow = _initial_state()
+    flow["session_id"] = str(db_session.id)
+    flow["intake"] = intake.to_dict()
+    flow["questions"] = questions
+    flow["answers"] = []
+    flow["current_index"] = 0
+    flow["diagnosis"] = None
+    flow["diagnosis_error"] = ""
+    flow["ai_calls"] = {"questions": 1, "diagnosis": 0}
+    _save_flow(request, flow)
 
-        score = 0
 
-        for q_id, weight in disease["score_map"].items():
+def has_active_session(request) -> bool:
+    flow = _flow(request)
+    return bool(flow.get("questions")) and bool(flow.get("intake"))
 
-            if user_answers.get(q_id) == "yes":
-                score += weight
 
-        if score >= disease["min_score"]:
-            results.append({
-                "name": disease["display"],
-                "message": disease["message"],
-                "score": score
-            })
+def question_context(request) -> dict:
+    flow = _flow(request)
+    questions = [QuestionItem.from_dict(row) for row in flow.get("questions", [])]
+    idx = int(flow.get("current_index", 0))
+    question = current_question(questions, idx)
+    total = len(questions)
+    return {
+        "has_session": has_active_session(request),
+        "completed": question is None,
+        "question": question,
+        "step": idx + 1,
+        "total": total,
+        "progress": int(((idx + 1) / total) * 100) if total else 0,
+    }
 
-    return results
+
+def submit_answer(request, answer_value: str) -> bool:
+    flow = _flow(request)
+    questions = [QuestionItem.from_dict(row) for row in flow.get("questions", [])]
+    answers = [AnswerItem.from_dict(row) for row in flow.get("answers", [])]
+    idx = int(flow.get("current_index", 0))
+    question = current_question(questions, idx)
+    if question is None:
+        return True
+
+    updated_answers = append_answer(answers, question, answer_value)
+    flow["answers"] = [answer.to_dict() for answer in updated_answers]
+    flow["current_index"] = next_index(idx)
+    _save_flow(request, flow)
+    return flow["current_index"] >= len(questions)
+
+
+def _top_conditions_from_diagnosis(condition_names: list[str]) -> list[Condition]:
+    matched: list[Condition] = []
+    for name in condition_names:
+        candidate = Condition.objects.filter(name__icontains=name).first()
+        if candidate:
+            matched.append(candidate)
+    return matched[:3]
+
+
+def get_or_build_result(request) -> dict:
+    flow = _flow(request)
+    if not has_active_session(request):
+        return {}
+
+    if flow.get("diagnosis"):
+        diagnosis_payload = flow["diagnosis"]
+        diagnosis_error = flow.get("diagnosis_error", "")
+    else:
+        intake = IntakeData.from_dict(flow["intake"])
+        answers = [AnswerItem.from_dict(row) for row in flow.get("answers", [])]
+        try:
+            diagnosis = generate_diagnosis(intake, answers)
+            diagnosis_payload = diagnosis.to_dict()
+            diagnosis_error = ""
+            flow["diagnosis"] = diagnosis_payload
+            flow["ai_calls"]["diagnosis"] = 1
+        except AIGenerationError as exc:
+            diagnosis_payload = DiagnosisResult(
+                conditions=[],
+                urgency="Moderate",
+                advice="Assessment unavailable because live AI generation failed. Please retry shortly.",
+            ).to_dict()
+            diagnosis_error = str(exc)
+            flow["diagnosis"] = diagnosis_payload
+            flow["diagnosis_error"] = diagnosis_error
+        _save_flow(request, flow)
+
+    built = build_result_payload(
+        diagnosis=DiagnosisResult.from_dict(diagnosis_payload)
+    )
+
+    condition_names = [row.get("name", "") for row in diagnosis_payload.get("conditions", [])]
+    matched_conditions = _top_conditions_from_diagnosis(condition_names)
+    recommended_docs = match_doctors_for_specializations(
+        [c.specialization for c in matched_conditions if c.specialization]
+    )
+    recommended_reads = recommended_articles(matched_conditions)
+
+    session_id = flow.get("session_id")
+    collectible = None
+    if session_id:
+        db_session = SymptomSession.objects.filter(id=session_id).first()
+        if db_session:
+            if db_session.status != SymptomSession.STATUS_COMPLETED:
+                db_session.status = SymptomSession.STATUS_COMPLETED
+                db_session.completed_at = timezone.now()
+                db_session.save(update_fields=["status", "completed_at"])
+            collectible = issue_collectible_tag(
+                db_session,
+                matched_conditions[0] if matched_conditions else None,
+            )
+
+    built["recommended_doctors"] = recommended_docs
+    built["recommended_articles"] = recommended_reads
+    built["ai_calls"] = flow.get("ai_calls", {"questions": 1, "diagnosis": 1})
+    built["ai_error"] = diagnosis_error
+    if collectible:
+        built["community_collectible"] = {
+            "tag_code": collectible.tag_code,
+            "label": collectible.display_label,
+            "community_url": f"/community/?tag={collectible.tag_code}",
+        }
+    else:
+        built["community_collectible"] = {}
+    return built
+
+
+def reset_session(request) -> None:
+    if SESSION_KEY in request.session:
+        del request.session[SESSION_KEY]
+        request.session.modified = True

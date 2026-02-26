@@ -1,28 +1,204 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Result</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthSync Result</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial;background:#f4f6fb;}
-.box{
- max-width:700px;
- margin:80px auto;
- background:white;
- padding:40px;
- border-radius:14px;
- box-shadow:0 10px 30px rgba(0,0,0,0.08);
+:root {
+    --bg: #edf4fb;
+    --panel: #ffffff;
+    --text: #10243a;
+    --muted: #5d7289;
+    --primary: #0d78e8;
+    --line: #dce8f4;
+    --radius-xl: 22px;
+    --radius-lg: 14px;
+    --shadow: 0 22px 55px rgba(16, 36, 58, 0.14);
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 28px 14px;
+    font-family: "Manrope", "Segoe UI", sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(900px 470px at -20% -15%, #d9efff 0%, transparent 58%),
+        radial-gradient(700px 430px at 120% 8%, #d9ffef 0%, transparent 52%),
+        var(--bg);
+}
+.layout {
+    width: min(1020px, 100%);
+    margin: 0 auto;
+    display: grid;
+    gap: 16px;
+}
+.panel {
+    border-radius: var(--radius-xl);
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    border: 1px solid #e3edf8;
+    padding: 20px;
+}
+.hero h1 {
+    margin: 0;
+    font-family: "DM Serif Display", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(34px, 5vw, 46px);
+}
+.hero p { color: var(--muted); margin: 8px 0 0; }
+.badge {
+    margin-top: 14px;
+    display: inline-flex;
+    padding: 8px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: #e8f3ff;
+    color: #0b5cae;
+}
+.risk {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    background: #f6fbff;
+    border: 1px solid #d6e9fb;
+    font-weight: 700;
+    color: #2b4d71;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 13px;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+}
+.card strong { font-size: 17px; }
+.card p { margin: 6px 0 0; color: #38556f; }
+.meta { margin-top: 8px; color: var(--muted); font-size: 14px; }
+.tag {
+    margin-top: 8px;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+.row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+.btn {
+    text-decoration: none;
+    color: white;
+    background: linear-gradient(90deg, var(--primary), #00a5c4);
+    border-radius: 10px;
+    font-weight: 800;
+    padding: 10px 14px;
+}
+.subtle {
+    color: var(--muted);
+    font-size: 13px;
+}
+@media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
+<div class="layout">
+    <section class="panel hero">
+        <h1>Final Assessment</h1>
+        <p>Diagnosis generated after completing the AI question set.</p>
+        {% if ai_error %}
+        <p style="margin-top:10px;color:#9d1e1e;font-weight:700;">AI status: unavailable ({{ ai_error }})</p>
+        {% else %}
+        <p style="margin-top:10px;color:#17613e;font-weight:700;">AI status: generated and validated.</p>
+        {% endif %}
+        <div class="badge">Urgency: {{ urgency }}</div>
+        <div class="risk">{{ risk_banner }}</div>
+    </section>
 
-<div class="box">
-<h2>Possible Result</h2>
+    <section class="panel">
+        <h3>Recommended Action</h3>
+        <p>{{ advice }}</p>
+    </section>
 
-<h3>{{ result.display_name }}</h3>
-<p>{{ result.message }}</p>
+    <section class="panel">
+        <h3>Likely Conditions</h3>
+        {% if conditions %}
+        <div class="grid">
+            {% for c in conditions %}
+            <article class="card">
+                <strong>{{ c.name }}</strong>
+                <p>{{ c.reasoning|default:"No extra explanation provided." }}</p>
+                <div class="meta">Likelihood: {{ c.likelihood|default:"N/A" }}{% if c.specialization %} | Specialization: {{ c.specialization }}{% endif %}</div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No condition candidates were returned.</p>
+        {% endif %}
+    </section>
 
+    <section class="panel">
+        <h3>Recommended Doctors</h3>
+        {% if recommended_doctors %}
+        <div class="grid">
+            {% for d in recommended_doctors %}
+            <article class="card">
+                <strong>{{ d.name }}</strong>
+                <p>{{ d.specialization }}</p>
+                <div class="meta">{{ d.city }} | {{ d.phone }} | {{ d.email }}</div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No matching doctors found for current specialization suggestions.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <h3>Related Articles</h3>
+        {% if recommended_articles %}
+        <div class="grid">
+            {% for a in recommended_articles %}
+            <article class="card">
+                <strong>{{ a.title }}</strong>
+                <p>{{ a.summary }}</p>
+                {% if a.url %}<div class="row"><a class="btn" href="{{ a.url }}">Read</a></div>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No article recommendations are available yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <h3>Collectible Community Tag</h3>
+        {% if collectible.tag_code %}
+        <div class="tag">{{ collectible.tag_code }}</div>
+        <p>{{ collectible.label }}</p>
+        <div class="row">
+            <a class="btn" href="{{ collectible.community_url }}">Use Tag in Community</a>
+            <a class="btn" href="/symptoms/reset/">Start New Check</a>
+        </div>
+        {% else %}
+        <p>No collectible tag available.</p>
+        {% endif %}
+        <p class="subtle">AI calls this session: Questions={{ ai_calls.questions|default:0 }}, Diagnosis={{ ai_calls.diagnosis|default:0 }}</p>
+    </section>
 </div>
-
 </body>
 </html>
