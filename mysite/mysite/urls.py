@@ -24,6 +24,7 @@ urlpatterns = [
     path('articles/', include('articles.urls')),
     path('community/', community_views.community, name='community'),
     path('symptoms/', include('symptom_checker.urls')),
+    path("accounts/", include("accounts.urls")),
    
 #     path('list-models/', articles_api.list_models, name='list_models'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

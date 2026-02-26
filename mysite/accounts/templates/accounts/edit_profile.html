@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.account-container {
+    display: flex;
+    justify-content: center;
+    padding: 60px 20px;
+    background: #f4f6f9;
+    min-height: 100vh;
+}
+
+.account-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.edit-form label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 500;
+}
+
+.edit-form input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.account-actions {
+    margin-top: 30px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    margin-right: 10px;
+    transition: 0.3s;
+}
+
+.btn.primary {
+    background: #4f46e5;
+    color: white;
+    border: none;
+}
+
+.btn.primary:hover {
+    background: #3730a3;
+}
+
+.btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn.secondary:hover {
+    background: #545b62;
+}
+</style>
+
+<div class="account-container">
+
+    <div class="account-card">
+
+        <h2>Edit Profile</h2>
+
+        <form method="post" class="edit-form">
+            {% csrf_token %}
+
+            <label>Username</label>
+            {{ form.username }}
+
+            <label>Email</label>
+            {{ form.email }}
+
+            {% if user.role == "doctor" %}
+                <label>License Number</label>
+                {{ form.license_number }}
+
+                <label>Specialization</label>
+                {{ form.specialization }}
+            {% endif %}
+
+            <div class="account-actions">
+                <button type="submit" class="btn primary">Update</button>
+                <a href="{% url 'profile' %}" class="btn secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
