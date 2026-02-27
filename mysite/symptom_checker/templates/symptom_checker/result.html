@@ -153,6 +153,9 @@ body {
 
     <section class="panel">
         <h3>Recommended Doctors</h3>
+        {% if recommended_specializations %}
+        <p class="meta">Specialist categories considered: {{ recommended_specializations|join:", " }}</p>
+        {% endif %}
         {% if recommended_doctors %}
         <div class="grid">
             {% for d in recommended_doctors %}
@@ -160,6 +163,10 @@ body {
                 <strong>{{ d.name }}</strong>
                 <p>{{ d.specialization }}</p>
                 <div class="meta">{{ d.city }} | {{ d.phone }} | {{ d.email }}</div>
+                <div class="meta">Source: {{ d.source|default:"HealthSync DB" }}</div>
+                <div class="row">
+                    <a class="btn" href="{{ d.map_search_url }}" target="_blank" rel="noopener">Open Location</a>
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -176,6 +183,7 @@ body {
             <article class="card">
                 <strong>{{ a.title }}</strong>
                 <p>{{ a.summary }}</p>
+                <div class="meta">Category: {{ a.category|default:"General" }}</div>
                 {% if a.url %}<div class="row"><a class="btn" href="{{ a.url }}">Read</a></div>{% endif %}
             </article>
             {% endfor %}
