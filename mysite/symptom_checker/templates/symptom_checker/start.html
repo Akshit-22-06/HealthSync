@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthSync - Symptom Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f2f6fb;
+            --panel: #ffffff;
+            --text: #10233a;
+            --muted: #5f7288;
+            --primary: #0f7aeb;
+            --accent: #00a98f;
+            --ring: rgba(15, 122, 235, 0.2);
+            --shadow: 0 20px 50px rgba(16, 35, 58, 0.14);
+            --radius-xl: 22px;
+            --radius-lg: 14px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Manrope", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1200px 500px at -10% -20%, #dff4ff 0%, transparent 55%),
+                radial-gradient(900px 460px at 110% 5%, #dcfff4 0%, transparent 48%),
+                var(--bg);
+            padding: 36px 16px;
+            display: grid;
+            place-items: center;
+        }
+        .card {
+            width: min(880px, 100%);
+            background: var(--panel);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .header {
+            padding: 26px 26px 16px;
+            background: linear-gradient(120deg, #eaf5ff, #f6fffc);
+            border-bottom: 1px solid #e3edf7;
+        }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0e6a95;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid #d2e8fb;
+            border-radius: 999px;
+            padding: 7px 12px;
+        }
+        h1 {
+            margin: 16px 0 8px;
+            font-family: "DM Serif Display", Georgia, serif;
+            font-weight: 400;
+            line-height: 1.1;
+            font-size: clamp(30px, 4.5vw, 46px);
+        }
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+        form {
+            padding: 26px;
+            display: grid;
+            gap: 14px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+        .field.wide {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #3f5065;
+        }
+        input, select {
+            width: 100%;
+            border: 1px solid #d7e3f0;
+            border-radius: var(--radius-lg);
+            padding: 12px 13px;
+            font-size: 15px;
+            color: var(--text);
+            background: #fcfeff;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+        .cta {
+            border: 0;
+            margin-top: 8px;
+            width: 100%;
+            border-radius: 14px;
+            background: linear-gradient(95deg, var(--primary), var(--accent));
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 14px;
+            cursor: pointer;
+        }
+        .tip {
+            font-size: 13px;
+            color: var(--muted);
+            background: #f4fbff;
+            border: 1px dashed #c9e5ff;
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .alert {
+            margin: 0;
+            border-radius: 12px;
+            border: 1px solid #f1c6c6;
+            background: linear-gradient(180deg, #fff7f7, #fff1f1);
+            color: #992323;
+            font-weight: 700;
+            padding: 12px 14px;
+        }
+        @media (max-width: 760px) {
+            .header, form { padding: 20px; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <section class="card">
+        <header class="header">
+            <span class="eyebrow">HealthSync Smart Triage</span>
+            <h1>Symptom Checker</h1>
+            <p class="subtitle">A guided, adaptive check that asks focused questions and gives urgency-based recommendations.</p>
+        </header>
+
+        <form method="POST" action="/symptoms/question/">
+            {% csrf_token %}
+            {% if error_message %}
+            <p class="alert">{{ error_message }}</p>
+            {% endif %}
+
+            <div class="grid">
+                <div class="field">
+                    <label for="age">Age</label>
+                    <input id="age" type="number" name="age" min="0" value="{{ form_data.age|default:'' }}" required>
+                </div>
+
+                <div class="field">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender">
+                        <option {% if form_data.gender|default:'Male' == 'Male' %}selected{% endif %}>Male</option>
+                        <option {% if form_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option {% if form_data.gender == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="field wide">
+                    <label for="state">Location (India)</label>
+                    <input
+                        id="state"
+                        type="text"
+                        name="state"
+                        list="location-suggestions"
+                        autocomplete="off"
+                        value="{{ form_data.state|default:'' }}"
+                        placeholder="Type area, road, city, district, state"
+                        required
+                    >
+                    <datalist id="location-suggestions"></datalist>
+                </div>
+
+                <div class="field wide">
+                    <label for="symptom">Main Symptom</label>
+                    <input id="symptom" type="text" name="symptom" value="{{ form_data.symptom|default:'' }}" placeholder="e.g., nose bleeding, fever, chest discomfort" required>
+                </div>
+            </div>
+
+            <p class="tip">This tool is informational and does not replace professional medical diagnosis.</p>
+            <button class="cta" type="submit">Start Adaptive Check</button>
+        </form>
+    </section>
+    <script>
+    (function () {
+        const input = document.getElementById("state");
+        const list = document.getElementById("location-suggestions");
+        if (!input || !list) return;
+
+        let timer = null;
+        input.addEventListener("input", function () {
+            const q = input.value.trim();
+            if (timer) clearTimeout(timer);
+            if (q.length < 2) {
+                list.innerHTML = "";
+                return;
+            }
+            timer = setTimeout(async function () {
+                try {
+                    const resp = await fetch(`/symptoms/location-suggest/?q=${encodeURIComponent(q)}`);
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const items = Array.isArray(data.items) ? data.items : [];
+                    list.innerHTML = items
+                        .map((text) => `<option value="${String(text).replace(/"/g, "&quot;")}"></option>`)
+                        .join("");
+                } catch (_) {
+                    // Ignore suggestion fetch errors to keep form usable offline.
+                }
+            }, 180);
+        });
+    })();
+    </script>
+</body>
+</html>

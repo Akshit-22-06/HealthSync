@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -13,6 +14,7 @@ from symptom_checker.engine import (
     submit_answer,
 )
 from symptom_checker.schemas import IntakeData
+from symptom_checker.services.doctor_discovery import suggest_locations
 
 
 def start(request):
@@ -27,11 +29,12 @@ def question(request):
         gender = (request.POST.get("gender") or "").strip()
         state = (request.POST.get("state") or "").strip()
         age_raw = (request.POST.get("age") or "").strip()
+        form_data = {"symptom": symptom, "gender": gender or "Male", "state": state, "age": age_raw}
         if not symptom:
             return render(
                 request,
                 "symptom_checker/start.html",
-                {"error_message": "Please enter your main symptom."},
+                {"error_message": "Please enter your main symptom.", "form_data": form_data},
             )
 
         try:
@@ -40,7 +43,7 @@ def question(request):
             return render(
                 request,
                 "symptom_checker/start.html",
-                {"error_message": "Age must be a number."},
+                {"error_message": "Age must be a number.", "form_data": form_data},
             )
 
         intake = IntakeData(age=age, gender=gender, state=state, symptom=symptom)
@@ -50,7 +53,7 @@ def question(request):
             return render(
                 request,
                 "symptom_checker/start.html",
-                {"error_message": f"Live AI question generation failed: {exc}"},
+                {"error_message": f"Live AI question generation failed: {exc}", "form_data": form_data},
             )
         return redirect("question")
 
@@ -101,6 +104,7 @@ def result_page(request):
             "advice": diagnosis.get("advice", ""),
             "risk_banner": result.get("risk_banner", ""),
             "recommended_doctors": result.get("recommended_doctors", []),
+            "recommended_specializations": result.get("recommended_specializations", []),
             "recommended_articles": result.get("recommended_articles", []),
             "collectible": result.get("community_collectible", {}),
             "ai_calls": result.get("ai_calls", {}),
@@ -112,3 +116,9 @@ def result_page(request):
 def reset_flow(request):
     reset_session(request)
     return redirect(reverse("symptom_home"))
+
+
+def location_suggest(request):
+    query = (request.GET.get("q") or "").strip()
+    items = suggest_locations(query, limit=15)
+    return JsonResponse({"items": items})
