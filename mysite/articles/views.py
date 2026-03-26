@@ -126,6 +126,29 @@ def _format_generated_article(raw_text: str) -> str:
     return "\n".join(html_parts)
 
 
+def _build_article_ai_error_message(exc: Exception) -> str:
+    message = str(exc or "")
+    lowered = message.lower()
+    if "reported as leaked" in lowered:
+        return (
+            "Gemini rejected this article key because it was reported as leaked. "
+            "Generate a new key and update GEMINI_API_KEY."
+        )
+    if "api key" in lowered and "invalid" in lowered:
+        return "GEMINI_API_KEY is invalid. Replace it with a valid Gemini API key."
+    if "403" in lowered or "forbidden" in lowered or "permission" in lowered:
+        return "Gemini request is forbidden (403). Check API key permissions and model access."
+    if "429" in lowered or "quota" in lowered or "rate limit" in lowered:
+        return "Gemini quota/rate limit reached (429). Retry shortly or increase quota."
+    if "timed out" in lowered or "timeout" in lowered:
+        return "Gemini request timed out. Retry once."
+    if "sdk is not installed" in lowered:
+        return "Gemini SDK is not installed in this environment. Install google-generativeai."
+    if "not configured" in lowered:
+        return "GEMINI_API_KEY is not configured in .env."
+    return "Could not generate article right now. Please try again."
+
+
 def gemini_blog_generate(request):
     article_text = None
     article_html = None
@@ -168,7 +191,7 @@ def gemini_blog_generate(request):
 
         except Exception as e:
             logger.exception("Gemini blog generation failed: %s", e)
-            error_message = "Could not generate article right now. Please try again."
+            error_message = _build_article_ai_error_message(e)
 
     return render(request, "articles/gemini_blog.html", {
         "article": article_text,
