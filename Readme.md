@@ -203,21 +203,6 @@ healthsync/
 	•	Bootstrap / Custom UI (Glassmorphism planned)
 
 ⸻
-
-📌 Important Notes for AI Assistants (Codex)
-
-When generating or modifying code:
-	1.	Maintain role-based access control.
-	2.	Do NOT convert symptom checker into medical diagnosis AI.
-	3.	Follow Django best practices.
-	4.	Keep models normalized.
-	5.	Maintain separation of concerns.
-	6.	Avoid breaking existing authentication logic.
-	7.	Preserve article status workflow.
-	8.	Ensure data validation on forms.
-
-⸻
-
 📜 License
 
 Academic Project – Not for commercial medical use.
