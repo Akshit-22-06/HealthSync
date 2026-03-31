@@ -12,6 +12,7 @@ venv/
 db.sqlite3
 media/
 staticfiles/
+.env
  
 # MacOS
 .DS_Store
